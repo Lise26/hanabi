@@ -106,7 +106,8 @@ class Ruleset:
         if observation['usedNoteTokens'] < 8:
             destination_name, value, hint_type = agent.card_hints_manager.tell_most_information(observation, threshold)
             if (destination_name, value, hint_type) != (None, None, None):
-                print(">>>give the most information hint to a player ", hint_type, " ", value, " to ", destination_name, "with threshold:", threshold)
+                print(">>>give the most information hint to a player ", hint_type, " ", value, " to ",
+                      destination_name, "with threshold:", threshold)
                 return GameData.ClientHintData(agent.name, destination_name, hint_type, value)
         return None
 
@@ -195,7 +196,6 @@ class Ruleset:
         Discards a useless card, if possible
         @param agent: the player that will try to discard
         @param observation: current state of the game
-        @param lowest: if True, the lowest useless card will be discarded
         @return: a request to discard the useless card, None if it is not possible
         """
         if observation['usedNoteTokens'] != 0:
@@ -243,7 +243,7 @@ class Ruleset:
         @return: a request to discard the oldest card, None if it is not possible
         """
         if observation['usedNoteTokens'] != 0:
-            card_pos = agent.card_discard_manager.discard_oldest(observation)
+            card_pos = agent.card_discard_manager.discard_oldest()
             print(">>>discard oldest card:", card_pos)
             return GameData.ClientPlayerDiscardCardRequest(agent.name, card_pos)
         return None

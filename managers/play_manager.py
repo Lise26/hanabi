@@ -32,10 +32,10 @@ class PlayManager(object):
 
         for (card_pos, p) in enumerate(self.agent.possibilities):
             # p = Counter of possible tuple (color,value)
-            # 1) Define the probability of the card being playable considering all the possible (color,value) instances
-            # that the card could be
-            tot_playable = sum(p[card] if self.agent.playable_card(card, observation['fireworks']) else 0 for card in p) # count the # possible instances that would lead to a playable card
-            tot_possibility = sum(p.values()) # total possibilities of the card
+            # Define the probability a card has to be playable considering all the possible (color,value) it could be
+            # count the # possible instances that would lead to a playable card
+            tot_playable = sum(p[card] if self.agent.playable_card(card, observation['fireworks']) else 0 for card in p)
+            tot_possibility = sum(p.values())  # total possibilities of the card
             if tot_playable == 0:
                 probability = 0
             else:
@@ -51,17 +51,19 @@ class PlayManager(object):
                     assert (fake_board != observation['fireworks'])
 
                     for i in range(p[card]):
-                        num_playable.append(sum(1 for player_info in observation['players'] for c in player_info.hand if self.agent.playable_card(c, fake_board)))
-                    
-                    
-                
-                avg_num_playable = float(sum(num_playable)) / len(num_playable) # weighted average of number of cards that would become playable = sum ( #possibility * #card that would become playable) / #possibilities of that card
-                avg_weight = float(sum(WEIGHT[card[1]] * p[card] for card in p)) / sum(p.values())  # compute the avg weight of the given card considering all the possible values associated with it 
+                        num_playable.append(sum(1 for player_info in observation['players']
+                                                for c in player_info.hand if self.agent.playable_card(c, fake_board)))
 
-                if probability > best_probability or ( probability == best_probability and 
-                                                        avg_num_playable > best_avg_num_playable + tolerance or
-                                                        avg_num_playable > best_avg_num_playable - tolerance and 
-                                                        avg_weight > best_avg_weight):
+                # weighted average of number of cards that would become playable
+                # = sum ( #possibility * #card that would become playable) / #possibilities of that card
+                avg_num_playable = float(sum(num_playable)) / len(num_playable)
+                # compute the avg weight of the given card considering all the possible values associated with it
+                avg_weight = float(sum(WEIGHT[card[1]] * p[card] for card in p)) / sum(p.values())
+
+                if probability > best_probability or (probability == best_probability and
+                                                      avg_num_playable > best_avg_num_playable + tolerance or
+                                                      avg_num_playable > best_avg_num_playable - tolerance and
+                                                      avg_weight > best_avg_weight):
                     best_card_pos, best_avg_num_playable, best_avg_weight, best_probability = card_pos, \
                                                                                               avg_num_playable, \
                                                                                               avg_weight, \

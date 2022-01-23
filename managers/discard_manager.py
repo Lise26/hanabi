@@ -35,9 +35,9 @@ class DiscardManager(object):
         # Look for the card that has the lowest possibility of being relevant (useful+last_copy).
         # In case of tie consider the one that has the lowest useful weight
         # Weights (value 1 : weight 5) (value 2: weight 4) (value 3: weight 3) (value 4: weight 2) (value 5: weight 1)
+        # -> If you have both a 1 and a 5 that are the last copy available is better to choose to discard the 5
         WEIGHT = {number: self.agent.NUM_NUMBERS + 1 - number for number in range(1, self.agent.NUM_NUMBERS + 1)}
-        best_relevant_weight = max(WEIGHT.values())  # 5
-        # WEIGHT -> If you have both a 1 and a 5 that are the last copy available is better to choose to discard the 5
+        best_relevant_weight = max(WEIGHT.values())
 
         for (card_pos, p) in enumerate(self.agent.possibilities):
             # p is a Counter of (color, value) tuples representing the chance that the card is (color, value)
@@ -67,8 +67,7 @@ class DiscardManager(object):
 
                 if relevant_weight < best_relevant_weight + tolerance:
                     # save card_pos at the given relevant_weight, to then pick the one with lower useful_weight
-                    best_cards_pos.append((useful_weight,
-                                           card_pos))
+                    best_cards_pos.append((useful_weight, card_pos))
 
         assert len(best_cards_pos) > 0
         useful_weight, card_pos = min(best_cards_pos, key=lambda t: t[0])  # consider the one with minor useful_weight
@@ -94,7 +93,7 @@ class DiscardManager(object):
             return None
 
     @staticmethod
-    def discard_oldest(self, observation=None):
+    def discard_oldest():
         """
         Look for the card that has been held in the hand the longest amount of time
         @return: the index of the oldest card (i.e. 0)

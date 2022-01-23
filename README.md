@@ -118,7 +118,7 @@ Delta | **18.65** | 17.4 | 16.8 | **16.54**
 
 According to those results, we decided to use the Delta agent for games with two players and the Piers agent for the games with more players.
 In the figures below are displayed the results of the experiment for the winning strategy for each
-number of players.
+number of players. Graphical results for all strategies can be found in the [results file](./results.md).
 
 ![Delta flow for 2 players](graphs/rcd2.png)
 ![Piers flow for 3 players](graphs/piers3.png)

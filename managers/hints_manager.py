@@ -155,8 +155,6 @@ class HintsManager(object):
         @return: hint that concerns the value/color most represented and concerning at least threshold in a player hand
                  if possible, None otherwise
         """
-        unknown_color = {'red': 0, 'blue': 0, 'yellow': 0, 'white': 0, 'green': 0}
-        unknown_value = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
         max_color_occurrences = max_value_occurrences = 0
         destination_name_color = destination_name_value = value_color = value_value = None
 

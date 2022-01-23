@@ -1,14 +1,9 @@
-#!/usr/bin/env python3
-
 from sys import stdout
 from threading import Thread
 import GameData
 import socket
-import time
 import os
 import argparse
-import matplotlib.pyplot as plt
-import numpy as np
 
 from constants import *
 from agent import Agent, Knowledge
@@ -50,11 +45,30 @@ observation = {'players': None,
                'usedNoteTokens': 0,
                'fireworks': None,
                'discard_pile': None,
-               'playersKnowledge': []
-               }
+               'playersKnowledge': []}
 scores = []
 player_names = []
 ruleset = Ruleset()
+
+
+def initialize(players):
+    global agent
+    global num_cards
+    if len(players) < 4:
+        num_cards = 5
+    else:
+        num_cards = 4
+    if AI:
+        agent = Agent(playerName, players.index(playerName), num_cards, ruleset)
+    playersKnowledge = {name: [Knowledge(color=None, value=None) for j in range(num_cards)] for name in players}
+    return playersKnowledge
+
+
+def next_turn():
+    """
+    Get observation : ask to the server to show the data
+    """
+    s.send(GameData.ClientGetGameStateRequest(playerName).serialize())
 
 
 def agentPlay():
@@ -76,25 +90,21 @@ def agentPlay():
                     action = agent.rule_choice_delta(observation)
                 else:
                     action = agent.piers_choice(observation)
-                # action = agent.rl_choice(observation)
+
+                # These other AI players are available, but they show less performant results
+                # action = agent.rule_choice(observation)
+                # action = agent.rule_choice_beta(observation)
                 # action = agent.piers_choice(observation)
                 # action = agent.osawa_outer_choice(observation)
                 # action = agent.vanDerBergh_choice(observation)
                 # action = agent.vanDerBergh_choice_prob(observation)
-                # action = agent.rule_choice(observation)
-                # action = agent.rule_choice_beta(observation)
-                # action = agent.rule_choice_delta(observation)
+
                 try:
                     s.send(action.serialize())
                 except:
                     print("Error")
                     run = False
                 observation['current_player'] = ""
-
-
-def next_turn():
-    # Get observation : ask to the server to show the data
-    s.send(GameData.ClientGetGameStateRequest(playerName).serialize())
 
 
 def manageInput():
@@ -156,23 +166,6 @@ def manageInput():
         stdout.flush()
 
 
-def initialize(players):
-    global agent
-    global num_cards
-
-    if len(players) < 4:
-        num_cards = 5
-    else:
-        num_cards = 4
-
-    if AI:
-        agent = Agent(playerName, players.index(playerName), num_cards, ruleset)
-
-    playersKnowledge = {name: [Knowledge(color=None, value=None) for j in range(num_cards)] for name in players}
-
-    return playersKnowledge
-
-
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # 0) open the connection
     s.connect((ip, port))
@@ -212,28 +205,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             run = False
         if not data:
             continue
-       
+
         if type(data) is GameData.ServerPlayerStartRequestAccepted:
             dataOk = True
-
-            # 6) Wait until everyone is ready and the game can start.
-            # data = s.recv(DATASIZE)
-            # data = GameData.GameData.deserialize(data)
 
         if type(data) is GameData.ServerStartGameData:
             dataOk = True
             player_names = data.players
             playersKnowledge = initialize(data.players)
             print("Game start!")
-            if AI: next_turn()
+            if AI:
+                next_turn()
 
-            # 7) The game can finally start
+            # 6) The game can finally start
             s.send(GameData.ClientPlayerReadyData(playerName).serialize())
-
-            # 8) Set the status from lobby to game.
             if not AI:
                 status = statuses[1]
-            
             print("---Starting game process done----")
 
         if type(data) is GameData.ServerGameStateData:
@@ -255,7 +242,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     print("\t" + c.toClientString())
                 print("Note tokens used: " + str(data.usedNoteTokens) + "/8")
                 print("Storm tokens used: " + str(data.usedStormTokens) + "/3")
-
             else:
                 observation = {'players': data.players,
                                'current_player': data.currentPlayer,
@@ -266,10 +252,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                'playersKnowledge': playersKnowledge}
 
             if AI and first:
-                # 8) Set the status from lobby to game.
+                # 7) Set the status from lobby to game.
                 status = statuses[1]
                 agent.set_players(observation)
-                first = False    
+                first = False
 
         if type(data) is GameData.ServerActionInvalid:
             dataOk = True
@@ -323,7 +309,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 d_val = data.value
             else:
                 d_col = data.value
-            for i in data.positions:     
+            for i in data.positions:
                 if d_val is not None:
                     playersKnowledge[data.destination][i].value = d_val
                 if d_col is not None:
@@ -349,25 +335,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print(" |Games played: ", len(scores))
             print(" |Best result: ", max(scores))
             print(" |Worst result: ", min(scores))
-            '''
-            # plotting results
-            if len(scores) >= 100:
-                x = np.arange(0, len(scores), 1)
-                plt.plot(x, scores)
-                plt.plot(x, [avg] * len(scores), 'r--')  # plotting the average
-                plt.scatter(x, scores)
-                plt.xlabel('games')
-                plt.ylabel('scores')
-                plt.xticks(x)
-                plt.yticks(scores)
-                plt.title('Agent =rule_choice_delta  Num_players = 5')
-                t = time.localtime()
-                timestamp = time.strftime('%b-%d-%Y_%H%M', t)
-                plt.savefig('graphs/' + timestamp + '.png')
-                run = False
-            '''
-            # reset and re-initialize
 
+            # reset and re-initialize
             if run is not False:
                 del agent
                 observation = {'players': None,
@@ -377,13 +346,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                'fireworks': None,
                                'discard_pile': None,
                                'playersKnowledge': []}
-                #time.sleep(5)
                 status = statuses[0]
                 first = True
                 playersKnowledge = initialize(player_names)
-                if AI: next_turn()
+                if AI:
+                    next_turn()
                 stdout.flush()
-                # run = False
                 print("Ready for a new game")
 
         if not dataOk:

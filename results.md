@@ -20,14 +20,14 @@
 |  vanDerBergh_choice_prob | 5 | 100 | ![Alt text](graphs/vdbp5.png)|   |
 
 
-## rule_choice
+## rule_choice_alpha
 
 | Agent  | Number of Players   | Number of games   |Results   |  Notes |
 |---|---|---|---|---|
-|  rule_choice | 2 | 100 | ![Alt text](graphs/rc2.png)  |   |
-|  rule_choice | 3 | 100 | ![Alt text](graphs/rc3.png) |   |
-|  rule_choice | 4 | 100 | ![Alt text](graphs/rc4.png)  |   |
-|  rule_choice | 5 | 100 | ![Alt text](graphs/rc5.png)|   |
+|  rule_choice_alpha | 2 | 100 | ![Alt text](graphs/rc2.png)  |   |
+|  rule_choice_alpha | 3 | 100 | ![Alt text](graphs/rc3.png) |   |
+|  rule_choice_alpha | 4 | 100 | ![Alt text](graphs/rc4.png)  |   |
+|  rule_choice_alpha | 5 | 100 | ![Alt text](graphs/rc5.png)|   |
 
 
 ## rule_choice_beta
