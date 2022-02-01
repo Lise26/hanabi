@@ -174,19 +174,17 @@ class Agent(Player):
         if action is not None: return action
         return None
 
-    def discard_sequence(self, observation):
-        action = self.ruleset.discard_useless_card(self, observation)
-        if action is not None: return action
-        action = self.ruleset.discard_duplicate_card(self, observation)
-        if action is not None: return action
-        action = self.ruleset.discard_less_relevant(self, observation)
-        if action is not None: return action
-        return None
-
     def safe_discard_sequence(self, observation):
         action = self.ruleset.discard_useless_card(self, observation)
         if action is not None: return action
         action = self.ruleset.discard_duplicate_card(self, observation)
+        if action is not None: return action
+        return None
+
+    def discard_sequence(self, observation):
+        action = self.safe_discard_sequence(observation)
+        if action is not None: return action
+        action = self.ruleset.discard_less_relevant(self, observation)
         if action is not None: return action
         return None
 
@@ -202,79 +200,56 @@ class Agent(Player):
                                   observation['players'], observation['playersKnowledge'])
 
         # CHOOSE ACTION
-        # 1) Check if there is a playable card (probability 1 of being playable)
+        # 1) check if there is a playable card (probability 1 of being playable)
         action = self.ruleset.play_best_card_prob(self, observation, 1)
         if action is not None: return action
-        # 2) If a lot of hints have been played, try to discard a useless or duplicate card
+        # 2) if a lot of hints have been played, try to discard a useless or duplicate card
         if observation['usedNoteTokens'] > 5:
-            action = self.ruleset.discard_useless_card(self, observation)
-            if action is not None:
-                return action
-            action = self.ruleset.discard_duplicate_card(self, observation)
-            if action is not None:
-                return action
-        # 3) If it is not possible to hint, discard
-        if observation['usedNoteTokens'] == 8:
             action = self.safe_discard_sequence(observation)
-            if action is not None:
-                return action
-        # 4) Try to hint next then other players with an helpful hint
+            if action is not None: return action
+        # 3) try to hint next then other players with an helpful hint
         action = self.ruleset.give_helpful_hint(self, observation)
-        if action is not None:
-            return action
-        # 6) Discard safely a card
+        if action is not None: return action
+        # 4) discard safely a card
         action = self.safe_discard_sequence(observation)
-        if action is not None:
-            return action
-        # 7) If no token has been used yet (its not possible to discard)
+        if action is not None: return action
+        # 5) if no token has been used yet (it's not possible to discard)
         if observation['usedNoteTokens'] == 0:
             action = self.hint_sequence(observation)
-            if action is not None:
-                return action
-        # 8) You still have 3 lives
+            if action is not None: return action
+        # 6) you still have 3 lives
         if observation['usedStormTokens'] == 0:
             # try to play a card if there is one with at least 60% of probability
             action = self.ruleset.play_best_card_prob(self, observation, 0.6)
-            if action is not None:
-                return action
+            if action is not None: return action
             if observation['usedNoteTokens'] < 4:  # or hint
                 action = self.hint_sequence(observation)
-                if action is not None:
-                    return action
-        # 9) You still have 2 lives
+                if action is not None: return action
+        # 7) you still have 2 lives
         elif observation['usedStormTokens'] == 1:
             action = self.ruleset.play_best_card_prob(self, observation, 0.8)
             if action is not None:
                 return action
 
         action = self.hint_sequence(observation)
-        if action is not None:
-            return action
+        if action is not None: return action
 
         action = self.discard_sequence(observation)
-        if action is not None:
-            return action
+        if action is not None: return action
 
         action = self.ruleset.tell_ones(self, observation)
-        if action is not None:
-            return action
+        if action is not None: return action
         action = self.ruleset.tell_fives(self, observation)
-        if action is not None:
-            return action
+        if action is not None: return action
         action = self.ruleset.tell_unknown(self, observation)
-        if action is not None:
-            return action
+        if action is not None: return action
         action = self.ruleset.tell_randomly(self, observation)
-        if action is not None:
-            return action
+        if action is not None: return action
 
         action = self.ruleset.play_best_card_prob(self, observation, 0.8)
-        if action is not None:
-            return action
-
+        if action is not None: return action
         action = self.ruleset.play_oldest(self, observation)
-        if action is not None:
-            return action
+        if action is not None: return action
 
         return None
 
@@ -288,22 +263,22 @@ class Agent(Player):
                                   observation['players'], observation['playersKnowledge'])
 
         # CHOOSE ACTION
-        # 1) Check if there is a playable card
+        # 1) check if there is a playable card
         action = self.ruleset.play_best_card_prob(self, observation, 1)
         if action is not None: return action
-        # 1.b) If there are less than 5 cards in the discard pile, discard the dead cards
+        # 1.b) if there are less than 5 cards in the discard pile, discard the dead cards
         if len(observation['discard_pile']) < 5 and observation['usedNoteTokens'] > 0:
             action = self.ruleset.discard_useless_card(self, observation)
             if action is not None: return action
-        # 2) If it is not possible to hint, discard
+        # 2) if it is not possible to hint, discard
         if observation['usedNoteTokens'] == 8:
             action = self.safe_discard_sequence(observation)
             if action is not None: return action
-        # 3) If you can hint, try first to give an helpful hint to the next player
+        # 3) if you can hint, try first to give an helpful hint to the next player
         else:
             action = self.hint_sequence(observation)
             if action is not None: return action
-        # 4) If no token has been used yet
+        # 4) if no token has been used yet
         if observation['usedNoteTokens'] == 0:
             action = self.ruleset.tell_unknown(self, observation)
             if action is not None: return action
@@ -313,7 +288,7 @@ class Agent(Player):
             if action is not None: return action
             action = self.ruleset.tell_randomly(self, observation)
             if action is not None: return action
-        # 8)
+        # 5) if you still have 2 lives
         if observation['usedStormTokens'] < 2:
             action = self.ruleset.play_best_card_prob(self, observation, 0.6)
             if action is not None: return action
@@ -330,13 +305,14 @@ class Agent(Player):
 
         action = self.hint_sequence(observation)
         if action is not None: return action
-
         action = self.discard_sequence(observation)
         if action is not None: return action
+
         action = self.ruleset.tell_unknown(self, observation)
         if action is not None: return action
         action = self.ruleset.tell_randomly(self, observation)
         if action is not None: return action
+
         return None
 
     def rule_choice_delta(self, observation):
@@ -349,28 +325,26 @@ class Agent(Player):
                                   observation['players'], observation['playersKnowledge'])
 
         # CHOOSE ACTION
-        # 1) Check if there is a playable card
+        # 1) check if there is a playable card
         action = self.ruleset.play_best_card_prob(self, observation, 0.9)
         if action is not None: return action
-        # 2) If we have token then use them!!! (with two player we can know a lot with 8 hints)
+        # 2) if we have token then use them (with two player we can know a lot with 8 hints)
         if observation['usedNoteTokens'] < 8:
             action = self.hint_sequence(observation)
             if action is not None: return action
-        # 3) Still at least 2 lives -> try to play a card with at least 60% probability of being playable
+        # 3) still at least 2 lives: try to play a card with at least 60% probability of being playable
         if observation['usedStormTokens'] < 2:
             action = self.ruleset.play_best_card_prob(self, observation, 0.6)
             if action is not None: return action
         # 4) discard
         action = self.discard_sequence(observation)
         if action is not None: return action
-        # 5) if nothing better found, discard oldest 
+        # 5) if nothing better found, discard oldest
         action = self.ruleset.discard_oldest(self, observation)
         if action is not None: return action
         # 6) if you can not discard and you still have lives, play the card with highest probability of being playable
-        # (praying the gods)
         if observation['usedStormTokens'] == 1 and observation['usedNoteTokens'] == 0:
-            # will return the card with the highest probability of being playable but with no threshold on the
-            # probability
+            # return the card with the highest probability of being playable but with no threshold on the probability
             action = self.ruleset.play_best_card_prob(self, observation, 0.0)
             if action is not None: return action
         else:
@@ -382,18 +356,16 @@ class Agent(Player):
 
     def vanDerBergh_choice(self, observation):
         """
-        Choose action for this turn.
-        Returns the request to the server
-        It follows the van der bergh strategy:
+        Choose action for this turn following the van der bergh strategy (optimized for 3 players):
         https://www.researchgate.net/publication/319853435_Aspects_of_the_Cooperative_Card_Game_Hanabi
-        (optimized for 3 players)
+        Returns the request to the server
         """
         # UPDATE POSSIBILITIES
         self.update_possibilities(observation['fireworks'], self.counterOfCards(observation['discard_pile']),
                                   observation['players'], observation['playersKnowledge'])
 
         # CHOOSE ACTION
-        # 1) Check if there is a card playable with prob 60%
+        # 1) check if there is a card playable with prob 60%
         action = self.ruleset.play_best_card_prob(self, observation, 0.6)
         if action is not None: return action
         # 2) discard a 100% useless card
@@ -409,16 +381,13 @@ class Agent(Player):
         action = self.ruleset.discard_less_relevant(self, observation)
         if action is not None: return action
 
-        print("something went wrong")
         return None
 
     def vanDerBergh_choice_prob(self, observation):
         """
-        Choose action for this turn.
-        Returns the request to the server
-        It follows the van der bergh strategy:
+        Choose action for this turn following the van der bergh strategy (optimized for 3 players):
         https://www.researchgate.net/publication/319853435_Aspects_of_the_Cooperative_Card_Game_Hanabi
-        (optimized for 3 players)
+        Returns the request to the server
         """
         # UPDATE POSSIBILITIES
         self.update_possibilities(observation['fireworks'], self.counterOfCards(observation['discard_pile']),
@@ -426,10 +395,7 @@ class Agent(Player):
 
         # CHOOSE ACTION
         # 1) Check if there is a card playable with prob 60%
-        if observation['usedStormTokens'] == 0:
-            prob = 0.6
-        if observation['usedStormTokens'] == 1:
-            prob = 0.6
+        prob = 0.6
         if observation['usedStormTokens'] == 2:
             prob = 0.9  # better not to risk
         action = self.ruleset.play_best_card_prob(self, observation, prob)
@@ -447,55 +413,54 @@ class Agent(Player):
         action = self.ruleset.discard_less_relevant(self, observation)
         if action is not None: return action
 
-        print("something went wrong")
         return None
 
     def piers_choice(self, observation):
         """
-        Choose action for this turn.
+        Choose action for this turn following the piers strategy as explained here:
+        https://www.researchgate.net/publication/318294875_Evaluating_and_modelling_Hanabi-playing_agents
         Returns the request to the server
-        It follows the piers strategy as explained here: https://www.researchgate.net/publication/318294875_Evaluating_and_modelling_Hanabi-playing_agents
         """
         # UPDATE POSSIBILITIES
-        # Start by updating the possibilities (should take hints into account?)
         self.update_possibilities(observation['fireworks'], self.counterOfCards(observation['discard_pile']),
                                   observation['players'], observation['playersKnowledge'])
 
         # CHOOSE ACTION
-        # 1) IfRule (lives > 1 ∧ ¬deck.hasCardsLeft) Then (PlayProbablySafeCard(0.0))
         lives = 3 - observation['usedStormTokens']
+        information = 8 - observation['usedNoteTokens']
         visible_cards = self.visible_cards(observation['fireworks'], self.counterOfCards(observation['discard_pile']),
                                            observation['players'])
         deck_left_cards = self.full_deck_composition - visible_cards
         number_cards_left = sum(deck_left_cards.values())
-        if (lives > 1 and number_cards_left <= 0):
+
+        # 1) if it remains more than 1 red token and there are no cards left in the deck, play the best card possible
+        if lives > 1 and number_cards_left <= 0:
             action = self.ruleset.play_best_card_prob(self, observation, 0.0)
             if action is not None: return action
-        # 2) PlaySafeCard
+        # 2) play safe card
         action = self.ruleset.play_best_card_prob(self, observation, 1.0)
         if action is not None: return action
-        # 3) IfRule (lives > 1) Then (PlayProbablySafeCard(0.6))
-        if (lives > 1):
+        # 3) if it remains more than 1 red token then play a card with 60% probability of being playable
+        if lives > 1:
             action = self.ruleset.play_best_card_prob(self, observation, 0.6)
             if action is not None: return action
-        # 4) TellAnyoneAboutUsefulCard
+        # 4) tell useful card
         action = self.ruleset.give_useful_hint(self, observation)
         if action is not None: return action
-        # 5) IfRule (information < 4) Then (TellDispensable)
-        information = 8 - observation['usedNoteTokens']
-        if (information < 4):
+        # 5) if it remains less that 4 blue tokens, tell useless
+        if information < 4:
             action = self.ruleset.tell_useless(self, observation)
             if action is not None: return action
         # 6) discard useless
         action = self.ruleset.discard_useless_card(self, observation)
         if action is not None: return action
-        # 7) DiscardOldestFirst
+        # 7) discard oldest first
         action = self.ruleset.discard_oldest(self, observation)
         if action is not None: return action
-        # 8) Tell randomly
+        # 8) tell randomly
         action = self.ruleset.tell_randomly(self, observation)
         if action is not None: return action
-        # 9) Discard less relevant
+        # 9) discard less relevant
         action = self.ruleset.discard_less_relevant(self, observation)
         if action is not None: return action
 
@@ -503,13 +468,10 @@ class Agent(Player):
 
     def osawa_outer_choice(self, observation):
         """
-        Choose action for this turn.
+        Choose action for this turn following the osawa outer strategy (optimized for 2 players)
         Returns the request to the server
-        It follows the osawa outer strategy
-         (optimized for 2 players)
         """
         # UPDATE POSSIBILITIES
-        # Start by updating the possibilities (should take hints into account?)
         self.update_possibilities(observation['fireworks'], self.counterOfCards(observation['discard_pile']),
                                   observation['players'], observation['playersKnowledge'])
 
@@ -523,7 +485,7 @@ class Agent(Player):
         # 3) hint about a card that is immediately playable
         action = self.ruleset.give_useful_hint(self, observation)
         if action is not None: return action
-        # 4) hint about the most informative
+        # 4) hint about an unknown card
         action = self.ruleset.tell_unknown(self, observation)
         if action is not None: return action
         # 5) discard less relevant
@@ -597,11 +559,13 @@ class Agent(Player):
         return cards
 
     @staticmethod
-    def counterOfCards(cardList=[]):
+    def counterOfCards(cardList=None):
         """
         Gets as input a list of Card.
         Output = Counter with keys (color,value)
         """
+        if cardList is None:
+            cardList = []
         counterCard = {}
         for card in cardList:
             key = (card.color, card.value)

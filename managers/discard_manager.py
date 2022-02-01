@@ -17,8 +17,7 @@ class DiscardManager(object):
             # if any possible instance of the card is useless then the card is surely useless
             if len(p) > 0 and all(
                     not self.agent.useful_card(card, observation['fireworks'], self.agent.full_deck_composition,
-                                               self.agent.counterOfCards(observation['discard_pile']))
-                    for card in p):
+                                               self.agent.counterOfCards(observation['discard_pile'])) for card in p):
                 return card_pos
         return None
 
@@ -32,7 +31,7 @@ class DiscardManager(object):
         tolerance = 1e-3
         best_cards_pos = []
         # HOW TO DECIDE?
-        # Look for the card that has the lowest possibility of being relevant (useful+last_copy).
+        # Look for the card that has the lowest possibility of being relevant (useful+last_copy)
         # In case of tie consider the one that has the lowest useful weight
         # Weights (value 1 : weight 5) (value 2: weight 4) (value 3: weight 3) (value 4: weight 2) (value 5: weight 1)
         # -> If you have both a 1 and a 5 that are the last copy available is better to choose to discard the 5
